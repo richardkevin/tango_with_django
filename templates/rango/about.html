@@ -1,17 +1,11 @@
-<!DOCTYPE html>
+{% extends 'base.html' %}
 
 {% load staticfiles %} <!-- New line -->
 
-<html>
+{% block title %}About{% endblock %}
 
-<head>
-    <title>Rango</title>
-</head>
-
-<body>
-    <h1>Rango's about...</h1>
+{% block body_block %}
+    <h1>About</h1>
     That's it! <strong>{{ boldmessage }}</strong><br />
     <img src="{% static "images/mengomosaico.jpg" %}" alt="Mosaico" /> <!-- New line -->
-</body>
-
-</html>
+{% endblock %}

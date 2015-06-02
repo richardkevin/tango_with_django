@@ -92,3 +92,5 @@ TEMPLATE_DIRS = (Path(BASE_DIR, 'templates'),)
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = Path(BASE_DIR, 'media')
+
+LOGIN_URL = '/rango/login/'
