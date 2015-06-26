@@ -1,11 +1,11 @@
 # coding: utf-8
 from django.shortcuts import render
 # from django.contrib.auth import authenticate, login, logout
-from django.http import HttpResponse, HttpResponseRedirect
 from django.contrib.auth.decorators import login_required
 
 from rango.models import Category, Page
-from rango.forms import CategoryForm, PageForm, UserForm, UserProfileForm
+from rango.forms import CategoryForm, PageForm
+from rango.bing_search import run_query
 
 
 def index(request):
@@ -125,3 +125,13 @@ def add_page(request, category_name_slug):
 # def user_logout(request):
 #     logout(request)
 #     return HttpResponseRedirect('/rango/')
+
+
+def search(request):
+    result_list = []
+    if request.method == 'POST':
+        query = request.POST['query'].strip()
+        if query:
+            result_list = run_query(query)
+
+    return render(request, 'rango/search.html', {'result_list': result_list})

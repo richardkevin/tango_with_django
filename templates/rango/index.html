@@ -7,9 +7,9 @@
 {% block body_block %}
     <div class="page-header">
         {% if user.is_authenticated %}
-            <h1>Rango says... hello {{ user.username }}!</h1>
+            <h1>Hello {{ user.username }}!</h1>
         {% else %}
-            <h1>Rango says... hello world!</h1>
+            <h1>Rango!</h1>
         {% endif %}
     </div>
 
@@ -37,7 +37,6 @@
                 <div class="panel-heading">
                     <h3 class="panel-title">Pages</h3>
                 </div>
-            </div>
             {% if pages %}
                 <ul class="list-group">
                 {% for page in pages %}
@@ -47,6 +46,7 @@
             {% else %}
                 <strong>There are no categories present.</strong>
             {% endif %}
+            </div>
         </div>
 
     </div>
