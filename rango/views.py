@@ -1,11 +1,12 @@
 # coding: utf-8
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 # from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
+from django.http import HttpResponse
 
 from rango.models import Category, Page
 from rango.forms import CategoryForm, PageForm
-from rango.bing_search import run_query
+from bing_search import run_query
 
 
 def index(request):
@@ -22,16 +23,26 @@ def about(request):
 
 def category(request, category_name_slug):
     context_dict = {}
+    context_dict['result_list'] = None
+    context_dict['query'] = None
+    if request.method == 'POST':
+        query = request.POST['query'].strip()
+        if query:
+            result_list = run_query(query)
+            context_dict['result_list'] = result_list
+            context_dict['query'] = query
+
     try:
         category = Category.objects.get(slug=category_name_slug)
         context_dict['category_name'] = category.name
-
-        pages = Page.objects.filter(category=category)
-
+        pages = Page.objects.filter(category=category).order_by('-views')
         context_dict['pages'] = pages
         context_dict['category'] = category
     except Category.DoesNotExist:
         pass
+
+    if not context_dict['query']:
+        context_dict['query'] = category.name
 
     return render(request, 'rango/category.html', context_dict)
 
@@ -73,6 +84,72 @@ def add_page(request, category_name_slug):
 
     context_dict = {'form': form, 'category': cat}
     return render(request, 'rango/add_page.html', context_dict)
+
+
+def search(request):
+    result_list = []
+    if request.method == 'POST':
+        query = request.POST['query'].strip()
+        if query:
+            result_list = run_query(query)
+
+    return render(request, 'rango/search.html', {'result_list': result_list})
+
+
+def track_url(request):
+    page_id = None
+    url = '/rango/'
+    if request.method == 'GET':
+        if 'page_id' in request.GET:
+            page_id = request.GET['page_id']
+            try:
+                page = Page.objects.get(id=page_id)
+                page.views = page.views + 1
+                page.save()
+                url = page.url
+            except:
+                pass
+    return redirect(url)
+
+
+@login_required
+def like_category(request):
+    cat_id = None
+    if request.method == 'GET':
+        cat_id = request.GET['category_id']
+
+    likes = 0
+    if cat_id:
+        cat = Category.objects.get(id=int(cat_id))
+        if cat:
+            likes = cat.likes + 1
+            cat.likes = likes
+            cat.save()
+
+    return HttpResponse(likes)
+
+
+def get_category_list(max_results=0, starts_with=''):
+    cat_list = []
+    if starts_with:
+        cat_list = Category.objects.filter(name__istartswith=starts_with)
+
+    if max_results > 0:
+        if len(cat_list) > max_results:
+            cat_list = cat_list[:max_results]
+
+    return cat_list
+
+
+def suggest_category(request):
+        cat_list = []
+        starts_with = ''
+        if request.method == 'GET':
+                starts_with = request.GET['suggestion']
+
+        cat_list = get_category_list(8, starts_with)
+
+        return render(request, 'rango/cats.html', {'cats': cat_list})
 
 
 # def register(request):
@@ -125,13 +202,3 @@ def add_page(request, category_name_slug):
 # def user_logout(request):
 #     logout(request)
 #     return HttpResponseRedirect('/rango/')
-
-
-def search(request):
-    result_list = []
-    if request.method == 'POST':
-        query = request.POST['query'].strip()
-        if query:
-            result_list = run_query(query)
-
-    return render(request, 'rango/search.html', {'result_list': result_list})
